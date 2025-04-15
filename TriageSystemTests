@@ -1,0 +1,153 @@
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TriageSystemTests {
+    private TriageSystem triage;
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final PrintStream originalOut = System.out;
+
+    private void setup() {
+        triage = new TriageSystem();
+        System.setOut(new PrintStream(outContent));
+    }
+
+    private void teardown() {
+        System.setOut(originalOut);
+        outContent.reset();
+    }
+
+    private boolean outputContains(String text) {
+        return outContent.toString().contains(text);
+    }
+
+    private void runTest(String testName, Runnable test) {
+        setup();
+        System.setOut(originalOut);
+        System.out.println("Running test: " + testName);
+        System.setOut(new PrintStream(outContent));
+        
+        try {
+            test.run();
+            System.setOut(originalOut);
+            System.out.println("✓ Test passed!");
+        } catch (AssertionError e) {
+            System.setOut(originalOut);
+            System.out.println("✗ Test failed: " + e.getMessage());
+        } finally {
+            teardown();
+        }
+    }
+
+    // Test adding a patient
+    private void testAddPatient() {
+        triage.addPatient("John Smith", "Broken arm", PriorityLevel.MEDIUM);
+        assert outputContains("Patient added: John Smith");
+        assert outputContains("Priority: MEDIUM");
+    }
+
+    // Test seeing the next patient with empty queue
+    private void testSeeNextPatientEmpty() {
+        triage.seeNextPatient();
+        assert outputContains("No patients waiting.");
+    }
+
+    // Test seeing the next patient with one patient
+    private void testSeeNextPatientSingle() {
+        triage.addPatient("Jane Doe", "Fever", PriorityLevel.LOW);
+        outContent.reset();
+        triage.seeNextPatient();
+        assert outputContains("Next patient to be seen: Jane Doe");
+        assert outputContains("Fever");
+    }
+
+    // Test priority ordering with multiple patients
+    private void testPriorityOrdering() {
+        triage.addPatient("Patient3", "Headache", PriorityLevel.LOW);
+        triage.addPatient("Patient1", "Heart attack", PriorityLevel.CRITICAL);
+        triage.addPatient("Patient2", "Broken leg", PriorityLevel.HIGH);
+        
+        outContent.reset();
+        triage.seeNextPatient();
+        assert outputContains("Patient1");
+        
+        outContent.reset();
+        triage.seeNextPatient();
+        assert outputContains("Patient2");
+        
+        outContent.reset();
+        triage.seeNextPatient();
+        assert outputContains("Patient3");
+    }
+
+    // Test display waiting list
+    private void testDisplayWaitingListEmpty() {
+        triage.displayWaitingList();
+        assert outputContains("No patients in the queue.");
+    }
+
+    // Test display waiting list with patients
+    private void testDisplayWaitingList() {
+        triage.addPatient("Alex", "Cough", PriorityLevel.LOW);
+        triage.addPatient("Beth", "Broken arm", PriorityLevel.MEDIUM);
+        
+        outContent.reset();
+        triage.displayWaitingList();
+        assert outputContains("=== Waiting List ===");
+        assert outputContains("Beth");
+        assert outputContains("Alex");
+    }
+
+    // Test update patient priority - successful update
+    private void testUpdatePatientPrioritySuccess() {
+        triage.addPatient("Charlie", "Dizziness", PriorityLevel.LOW);
+        outContent.reset();
+        boolean result = triage.updatePatientPriority("Charlie", PriorityLevel.HIGH);
+        assert result;
+        assert outputContains("Updated patient priority");
+        assert outputContains("Priority: HIGH");
+    }
+
+    // Test update patient priority - patient not found
+    private void testUpdatePatientPriorityNotFound() {
+        boolean result = triage.updatePatientPriority("NonExistent", PriorityLevel.HIGH);
+        assert !result;
+        assert outputContains("Patient not found");
+    }
+
+    // Test the time order within the same priority level
+    private void testTimeOrderWithinPriority() throws InterruptedException {
+        triage.addPatient("First", "Cough", PriorityLevel.MEDIUM);
+        Thread.sleep(100); // Small delay to ensure different timestamps
+        triage.addPatient("Second", "Headache", PriorityLevel.MEDIUM);
+        
+        outContent.reset();
+        triage.seeNextPatient();
+        assert outputContains("First");
+        
+        outContent.reset();
+        triage.seeNextPatient();
+        assert outputContains("Second");
+    }
+
+    public static void main(String[] args) {
+        TriageSystemTests tests = new TriageSystemTests();
+        
+        tests.runTest("Add Patient", tests::testAddPatient);
+        tests.runTest("See Next Patient - Empty Queue", tests::testSeeNextPatientEmpty);
+        tests.runTest("See Next Patient - Single Patient", tests::testSeeNextPatientSingle);
+        tests.runTest("Priority Ordering", tests::testPriorityOrdering);
+        tests.runTest("Display Waiting List - Empty", tests::testDisplayWaitingListEmpty);
+        tests.runTest("Display Waiting List - With Patients", tests::testDisplayWaitingList);
+        tests.runTest("Update Patient Priority - Success", tests::testUpdatePatientPrioritySuccess);
+        tests.runTest("Update Patient Priority - Not Found", tests::testUpdatePatientPriorityNotFound);
+        
+        try {
+            tests.runTest("Time Order Within Priority", tests::testTimeOrderWithinPriority);
+        } catch (Exception e) {
+            System.out.println("Error in time order test: " + e.getMessage());
+        }
+    }
+}
