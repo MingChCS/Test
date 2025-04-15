@@ -1,0 +1,38 @@
+
+import java.time.LocalDateTime;
+
+public class Patient implements Comparable<Patient> {
+    private String name;
+    private String complaint;
+    private PriorityLevel priority;
+    private LocalDateTime timeOfIntake;
+
+    public Patient(String name, String complaint, PriorityLevel priority) {
+        this.name = name;
+        this.complaint = complaint;
+        this.priority = priority;
+        this.timeOfIntake = LocalDateTime.now();
+    }
+
+    public String getName() { return name; }
+    public String getComplaint() { return complaint; }
+    public PriorityLevel getPriority() { return priority; }
+    public LocalDateTime getTimeOfIntake() { return timeOfIntake; }
+
+    public void setPriority(PriorityLevel priority) {
+        this.priority = priority;
+    }
+
+    @Override
+    public int compareTo(Patient other) {
+        int priorityComparison = other.priority.ordinal() - this.priority.ordinal();
+        if (priorityComparison != 0) return priorityComparison;
+        return this.timeOfIntake.compareTo(other.timeOfIntake);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s | Complaint: %s | Priority: %s | Intake Time: %s",
+                name, complaint, priority, timeOfIntake.toString());
+    }
+}
