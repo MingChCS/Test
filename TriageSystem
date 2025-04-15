@@ -1,0 +1,49 @@
+
+import java.util.PriorityQueue;
+import java.util.Iterator;
+
+public class TriageSystem {
+    private PriorityQueue<Patient> waitingList = new PriorityQueue<>();
+
+    public void addPatient(String name, String complaint, PriorityLevel priority) {
+        Patient patient = new Patient(name, complaint, priority);
+        waitingList.offer(patient);
+        System.out.println("Patient added: " + patient);
+    }
+
+    public void seeNextPatient() {
+        Patient next = waitingList.poll();
+        if (next != null) {
+            System.out.println("Next patient to be seen: " + next);
+        } else {
+            System.out.println("No patients waiting.");
+        }
+    }
+
+    public void displayWaitingList() {
+        if (waitingList.isEmpty()) {
+            System.out.println("No patients in the queue.");
+            return;
+        }
+        System.out.println("=== Waiting List ===");
+        for (Patient p : waitingList) {
+            System.out.println(p);
+        }
+    }
+
+    public boolean updatePatientPriority(String name, PriorityLevel newPriority) {
+        Iterator<Patient> iterator = waitingList.iterator();
+        while (iterator.hasNext()) {
+            Patient patient = iterator.next();
+            if (patient.getName().equalsIgnoreCase(name)) {
+                iterator.remove(); // remove from queue
+                patient.setPriority(newPriority);
+                waitingList.offer(patient); // re-add with new priority
+                System.out.println("Updated patient priority: " + patient);
+                return true;
+            }
+        }
+        System.out.println("Patient not found.");
+        return false;
+    }
+}
