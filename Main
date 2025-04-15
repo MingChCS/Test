@@ -1,1 +1,51 @@
 
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        TriageSystem triage = new TriageSystem();
+
+        while (true) {
+            System.out.println("\n--- Emergency Triage System ---");
+            System.out.println("1. Add Patient");
+            System.out.println("2. See Next Patient");
+            System.out.println("3. Display Waiting List");
+            System.out.println("4. Exit");
+            System.out.print("Choose an option: ");
+
+            int choice = Integer.parseInt(scanner.nextLine());
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter name: ");
+                    String name = scanner.nextLine();
+
+                    System.out.print("Enter complaint: ");
+                    String complaint = scanner.nextLine();
+
+                    System.out.print("Enter priority (LOW, MEDIUM, HIGH, CRITICAL): ");
+                    String priorityInput = scanner.nextLine().toUpperCase();
+
+                    PriorityLevel priority = PriorityLevel.valueOf(priorityInput);
+                    triage.addPatient(name, complaint, priority);
+                    break;
+
+                case 2:
+                    triage.seeNextPatient();
+                    break;
+
+                case 3:
+                    triage.displayWaitingList();
+                    break;
+
+                case 4:
+                    System.out.println("Exiting system...");
+                    return;
+
+                default:
+                    System.out.println("Invalid option.");
+            }
+        }
+    }
+}
